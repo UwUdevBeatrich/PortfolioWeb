@@ -745,3 +745,202 @@ section {
   color: var(--accent);
   transform: translateX(4px);
 }
+
+/* contact */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  align-items: center;
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-heading {
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -1.5px;
+  margin-bottom: 20px;
+}
+
+.contact-subtitle {
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.contact-socials {
+  display: flex;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.contact-social-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 10px 20px;
+  background: transparent;
+  border: 1.5px solid var(--accent);
+  border-radius: 100px;
+  transition: background 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.contact-social-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.contact-social-btn:hover {
+  background: var(--accent);
+  color: var(--bg);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(245, 160, 184, 0.25);
+}
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color 0.1s, box-shadow 0.1s;
+}
+
+.contact-form:hover {
+  border-color: var(--accent-blue);
+  box-shadow:
+    0 0 10px rgba(126, 184, 218, 0.5),
+    0 0 25px rgba(126, 184, 218, 0.35),
+    0 0 50px rgba(126, 184, 218, 0.2),
+    0 0 80px rgba(126, 184, 218, 0.1),
+    inset 0 0 12px rgba(126, 184, 218, 0.1);
+}
+
+.contact-form input,
+.contact-form textarea {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.1s, box-shadow 0.1s;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  border-color: var(--accent-blue);
+  box-shadow:
+    0 0 8px rgba(126, 184, 218, 0.4),
+    0 0 20px rgba(126, 184, 218, 0.2);
+}
+
+.contact-form input::placeholder,
+.contact-form textarea::placeholder {
+  color: var(--text-dim);
+}
+
+.contact-form textarea {
+  resize: vertical;
+  min-height: 130px;
+}
+
+.form-submit {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 14px 24px;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+}
+
+.form-submit:hover {
+  background: #f7b8cc;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(245, 160, 184, 0.2);
+}
+
+.form-submit:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* footer */
+footer {
+  text-align: center;
+  padding: 48px 60px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  position: relative;
+}
+
+.back-to-top {
+  position: absolute;
+  top: -20px;
+  right: 60px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  background: var(--bg);
+  transition: color 0.1s;
+}
+
+.back-to-top:hover {
+  color: var(--accent);
+}
+
+.footer-deco {
+  width: 32px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.25;
+  margin: 0 auto 20px;
+}
+
+.footer-credit {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+footer p {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.footer-year {
+  margin-top: 6px;
+  opacity: 0.4;
+}
