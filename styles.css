@@ -85,6 +85,17 @@ img {
   color: var(--bg);
 }
 
+/* scroll progress */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  z-index: 9999;
+  background: linear-gradient(90deg, var(--accent), rgba(245, 160, 184, 0.4));
+  width: 0%;
+}
+
 /* nav */
 .hero-nav {
   position: fixed;
