@@ -1,5 +1,13 @@
 // portfolio main js
 
+// mouse tracking
+let mouseX = 0;
+let mouseY = 0;
+document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+});
+
 // scroll progress
 (() => {
     const bar = document.querySelector('.scroll-progress');
@@ -294,3 +302,106 @@ function triggerHeroEntrance() {
 triggerHeroEntrance();
 initScrollReveal();
 initStatCounters();
+
+
+// cherry blossom petals
+const petalsCanvas = document.getElementById('petals-canvas');
+let petalsCtx = null;
+
+if (petalsCanvas) {
+    petalsCtx = petalsCanvas.getContext('2d');
+
+    function resizePetalsCanvas() {
+        petalsCanvas.width = window.innerWidth;
+        petalsCanvas.height = window.innerHeight;
+    }
+    resizePetalsCanvas();
+    window.addEventListener('resize', resizePetalsCanvas);
+}
+
+class Petal {
+    constructor() {
+        this.reset();
+    }
+
+    reset() {
+        if (!petalsCanvas) return;
+        this.x = Math.random() * petalsCanvas.width;
+        this.y = -15;
+        this.size = Math.random() * 6 + 3;
+        this.speedY = Math.random() * 0.8 + 0.3;
+        this.speedX = Math.random() * 0.6 - 0.3;
+        this.rotation = Math.random() * Math.PI * 2;
+        this.rotationSpeed = (Math.random() - 0.5) * 0.02;
+        this.opacity = Math.random() * 0.35 + 0.1;
+        this.wobble = Math.random() * Math.PI * 2;
+        this.wobbleSpeed = Math.random() * 0.015 + 0.005;
+    }
+
+    update() {
+        if (!petalsCanvas) return;
+        const dx = this.x - mouseX;
+        const dy = this.y - mouseY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const repelRadius = 100;
+        if (dist < repelRadius && dist > 0) {
+            const force = (repelRadius - dist) / repelRadius;
+            const angle = Math.atan2(dy, dx);
+            this.x += Math.cos(angle) * force * 5;
+            this.y += Math.sin(angle) * force * 5;
+            this.rotation += force * 0.12;
+        }
+
+        this.y += this.speedY;
+        this.wobble += this.wobbleSpeed;
+        this.x += this.speedX + Math.sin(this.wobble) * 0.3;
+        this.rotation += this.rotationSpeed;
+        if (this.y > petalsCanvas.height + 15) this.reset();
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        ctx.globalAlpha = this.opacity;
+        ctx.fillStyle = '#f5a0b8';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, this.size, this.size * 0.55, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+}
+
+const mainPetals = [];
+for (let i = 0; i < 25; i++) {
+    const p = new Petal();
+    if (petalsCanvas) {
+        p.y = Math.random() * petalsCanvas.height;
+    }
+    p._targetOpacity = p.opacity;
+    p.opacity = 0;
+    p._fadeDelay = i * 120;
+    mainPetals.push(p);
+}
+
+function startMainPetals() {
+    if (!petalsCanvas || !petalsCtx) return;
+    const fadeStart = performance.now();
+
+    function animate(now) {
+        petalsCtx.clearRect(0, 0, petalsCanvas.width, petalsCanvas.height);
+        mainPetals.forEach(p => {
+            const elapsed = now - fadeStart - p._fadeDelay;
+            if (elapsed > 0 && p.opacity < p._targetOpacity) {
+                p.opacity = Math.min(p._targetOpacity, elapsed / 800 * p._targetOpacity);
+            }
+            p.update();
+            p.draw(petalsCtx);
+        });
+        requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+}
+
+// start petals on load (will be moved to intro trigger later)
+startMainPetals();
