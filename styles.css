@@ -107,6 +107,234 @@ img {
   z-index: 100;
 }
 
+/* intro overlay */
+#intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.8s var(--ease-smooth), transform 0.8s var(--ease-smooth);
+}
+
+#intro-overlay.fade-out {
+  opacity: 0;
+  transform: scale(1.05);
+  pointer-events: none;
+}
+
+#intro-petals {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.intro-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.intro-tree {
+  width: 120px;
+  height: 180px;
+  opacity: 0;
+  animation: fadeInUp 1.5s var(--ease) 0.3s forwards;
+}
+
+.sakura-tree-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.tree-path {
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  animation: drawTree 2.5s ease 0.5s forwards;
+}
+
+.tree-bloom {
+  opacity: 0;
+  animation: bloomIn 1s ease forwards;
+}
+.b1 { animation-delay: 1.5s; }
+.b2 { animation-delay: 1.7s; }
+.b3 { animation-delay: 1.9s; }
+.b4 { animation-delay: 2.1s; }
+.b5 { animation-delay: 2.3s; }
+
+@keyframes drawTree {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes bloomIn {
+  to { opacity: 1; }
+}
+
+.intro-name {
+  opacity: 0;
+  animation: fadeInUp 1s var(--ease) 1.2s forwards;
+}
+
+.glitch-text {
+  font-family: var(--font-mono);
+  font-size: clamp(1.8rem, 5vw, 3.5rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent-bright), var(--accent-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+  display: inline-block;
+  animation: glitchBase 3s steps(1) infinite;
+}
+
+.glitch-text::before,
+.glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-text-fill-color: initial;
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+}
+
+.glitch-text::before {
+  color: var(--accent);
+  animation: glitch1 3s steps(1) infinite;
+  clip-path: polygon(0 0, 100% 0, 100% 15%, 0 15%,
+                      0 30%, 100% 30%, 100% 40%, 0 40%,
+                      0 60%, 100% 60%, 100% 70%, 0 70%,
+                      0 85%, 100% 85%, 100% 95%, 0 95%);
+}
+
+.glitch-text::after {
+  color: var(--accent-blue);
+  animation: glitch2 3s steps(1) infinite;
+  clip-path: polygon(0 5%, 100% 5%, 100% 20%, 0 20%,
+                      0 35%, 100% 35%, 100% 50%, 0 50%,
+                      0 65%, 100% 65%, 100% 80%, 0 80%,
+                      0 90%, 100% 90%, 100% 100%, 0 100%);
+}
+
+@keyframes glitchBase {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translateX(-2px); }
+  21% { transform: translateX(2px); }
+  22% { transform: translate(0); }
+  65% { transform: translateX(2px); }
+  66% { transform: translateX(-2px); }
+  67% { transform: translate(0); }
+}
+
+@keyframes glitch1 {
+  0%, 100% { transform: translateX(0); opacity: 0; }
+  18% { transform: translateX(0); opacity: 0; }
+  19% { transform: translateX(-6px); opacity: 0.5; }
+  20% { transform: translateX(4px); opacity: 0.5; }
+  21% { transform: translateX(-7px); opacity: 0.5; }
+  22% { transform: translateX(3px); opacity: 0.5; }
+  23% { transform: translateX(0); opacity: 0; }
+  58% { transform: translateX(0); opacity: 0; }
+  59% { transform: translateX(-5px); opacity: 0.5; }
+  60% { transform: translateX(6px); opacity: 0.5; }
+  61% { transform: translateX(-4px); opacity: 0.5; }
+  62% { transform: translateX(0); opacity: 0; }
+}
+
+@keyframes glitch2 {
+  0%, 100% { transform: translateX(0); opacity: 0; }
+  18% { transform: translateX(0); opacity: 0; }
+  19% { transform: translateX(5px); opacity: 0.5; }
+  20% { transform: translateX(-4px); opacity: 0.5; }
+  21% { transform: translateX(6px); opacity: 0.5; }
+  22% { transform: translateX(-3px); opacity: 0.5; }
+  23% { transform: translateX(0); opacity: 0; }
+  58% { transform: translateX(0); opacity: 0; }
+  59% { transform: translateX(7px); opacity: 0.5; }
+  60% { transform: translateX(-5px); opacity: 0.5; }
+  61% { transform: translateX(3px); opacity: 0.5; }
+  62% { transform: translateX(0); opacity: 0; }
+}
+
+.intro-tagline {
+  opacity: 0;
+  animation: fadeInUp 1s var(--ease) 1.8s forwards;
+}
+
+.intro-subtitle {
+  font-family: var(--font-mono);
+  font-size: clamp(0.75rem, 1.8vw, 0.95rem);
+  color: var(--text-dim);
+  letter-spacing: 4px;
+  text-transform: lowercase;
+}
+
+.intro-enter {
+  opacity: 0;
+  animation: fadeInUp 1s var(--ease) 2.2s forwards;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 16px 0;
+  position: relative;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.gate-text {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  padding: 0 20px;
+  transition: color 0.3s var(--ease), text-shadow 0.3s var(--ease);
+}
+
+.gate-line {
+  width: 60px;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.3;
+  transition: width 0.5s var(--ease), opacity 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+
+.intro-enter:hover .gate-text {
+  color: var(--white);
+  text-shadow: 0 0 20px rgba(245, 160, 184, 0.4);
+}
+
+.intro-enter:hover .gate-line {
+  width: 100px;
+  opacity: 0.8;
+  box-shadow: 0 0 12px rgba(245, 160, 184, 0.3);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* nav */
 .hero-nav {
   position: fixed;

@@ -298,10 +298,6 @@ function triggerHeroEntrance() {
     requestAnimationFrame(updateParallax);
 })();
 
-// init on page load (will be moved to intro trigger later)
-triggerHeroEntrance();
-initScrollReveal();
-initStatCounters();
 
 
 // cherry blossom petals
@@ -403,5 +399,157 @@ function startMainPetals() {
     requestAnimationFrame(animate);
 }
 
-// start petals on load (will be moved to intro trigger later)
-startMainPetals();
+// intro overlay
+const introOverlay = document.getElementById('intro-overlay');
+let introAnimating = true;
+let introCtx = null;
+let introPetals = [];
+
+const introPetalsCanvas = document.getElementById('intro-petals');
+
+if (introPetalsCanvas) {
+    introCtx = introPetalsCanvas.getContext('2d');
+
+    function resizeIntroCanvas() {
+        introPetalsCanvas.width = window.innerWidth;
+        introPetalsCanvas.height = window.innerHeight;
+    }
+    resizeIntroCanvas();
+    window.addEventListener('resize', resizeIntroCanvas);
+
+    class IntroPetal {
+        constructor(canvas) {
+            this.canvas = canvas;
+            this.reset();
+        }
+
+        reset() {
+            this.x = Math.random() * this.canvas.width;
+            this.y = -20;
+            this.size = Math.random() * 8 + 4;
+            this.speedY = Math.random() * 1.5 + 0.5;
+            this.speedX = Math.random() * 1 - 0.5;
+            this.rotation = Math.random() * Math.PI * 2;
+            this.rotationSpeed = (Math.random() - 0.5) * 0.03;
+            this.opacity = Math.random() * 0.35 + 0.15;
+            this.wobble = Math.random() * Math.PI * 2;
+            this.wobbleSpeed = Math.random() * 0.02 + 0.01;
+        }
+
+        update() {
+            const dx = this.x - mouseX;
+            const dy = this.y - mouseY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const repelRadius = 120;
+            if (dist < repelRadius && dist > 0) {
+                const force = (repelRadius - dist) / repelRadius;
+                const angle = Math.atan2(dy, dx);
+                this.x += Math.cos(angle) * force * 6;
+                this.y += Math.sin(angle) * force * 6;
+                this.rotation += force * 0.15;
+            }
+
+            this.y += this.speedY;
+            this.wobble += this.wobbleSpeed;
+            this.x += this.speedX + Math.sin(this.wobble) * 0.5;
+            this.rotation += this.rotationSpeed;
+
+            if (this.y > this.canvas.height + 20) {
+                this.reset();
+            }
+        }
+
+        draw(ctx) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+            ctx.globalAlpha = this.opacity;
+            ctx.fillStyle = '#f5a0b8';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, this.size, this.size * 0.6, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            ctx.beginPath();
+            ctx.ellipse(-this.size * 0.2, -this.size * 0.1, this.size * 0.4, this.size * 0.2, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    introPetals = [];
+    for (let i = 0; i < 50; i++) {
+        const petal = new IntroPetal(introPetalsCanvas);
+        petal.y = Math.random() * introPetalsCanvas.height;
+        introPetals.push(petal);
+    }
+
+    function animateIntroPetals() {
+        if (!introAnimating) return;
+        introCtx.clearRect(0, 0, introPetalsCanvas.width, introPetalsCanvas.height);
+        introPetals.forEach(p => {
+            p.update();
+            p.draw(introCtx);
+        });
+        requestAnimationFrame(animateIntroPetals);
+    }
+    animateIntroPetals();
+}
+
+// enter button
+const introEnter = document.getElementById('intro-enter');
+
+if (introEnter && introOverlay) {
+    introEnter.addEventListener('click', () => {
+        const cx = window.innerWidth / 2;
+        const cy = window.innerHeight / 2;
+        let warpStart = null;
+        const warpDuration = 1600;
+
+        const introInner = introOverlay.querySelector('.intro-content');
+        if (introInner) {
+            introInner.style.transition = 'opacity 0.3s ease';
+            introInner.style.opacity = '0';
+        }
+
+        function warpPetals(timestamp) {
+            if (!warpStart) warpStart = timestamp;
+            const elapsed = timestamp - warpStart;
+            const progress = Math.min(elapsed / warpDuration, 1);
+            const ease = progress * progress * progress;
+
+            if (introPetalsCanvas && introCtx) {
+                introCtx.clearRect(0, 0, introPetalsCanvas.width, introPetalsCanvas.height);
+                introPetals.forEach(p => {
+                    const dx = p.x - cx;
+                    const dy = p.y - cy;
+                    const angle = Math.atan2(dy, dx);
+                    const speed = ease * 28;
+                    p.x += Math.cos(angle) * speed;
+                    p.y += Math.sin(angle) * speed;
+                    p.size += ease * 1.8;
+                    p.opacity = Math.max(0, p.opacity + (progress > 0.7 ? -0.03 : 0.005));
+                    p.rotation += 0.08 + ease * 0.15;
+                    p.draw(introCtx);
+                });
+            }
+
+            if (progress < 1) {
+                requestAnimationFrame(warpPetals);
+            } else {
+                introOverlay.classList.add('fade-out');
+                setTimeout(() => {
+                    introOverlay.style.display = 'none';
+                    introAnimating = false;
+
+                    triggerHeroEntrance();
+                    initScrollReveal();
+                    initStatCounters();
+                    startMainPetals();
+                }, 400);
+            }
+        }
+
+        introAnimating = false;
+        requestAnimationFrame(warpPetals);
+    });
+}
