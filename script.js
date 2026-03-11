@@ -527,41 +527,6 @@ function triggerHeroEntrance() {
     }
 }
 
-// hero parallax
-(() => {
-    const hero = document.getElementById('hero');
-    const heroName = hero ? hero.querySelector('.hero-name') : null;
-    if (!hero || !heroName) return;
-
-    let targetX = 0;
-    let targetY = 0;
-    let currentX = 0;
-    let currentY = 0;
-
-    const maxMovement = 10;
-
-    hero.addEventListener('mousemove', (e) => {
-        const centerX = window.innerWidth / 2;
-        const centerY = window.innerHeight / 2;
-        targetX = ((e.clientX - centerX) / centerX) * maxMovement;
-        targetY = ((e.clientY - centerY) / centerY) * maxMovement;
-    });
-
-    hero.addEventListener('mouseleave', () => {
-        targetX = 0;
-        targetY = 0;
-    });
-
-    const updateParallax = () => {
-        const lerp = 0.08;
-        currentX += (targetX - currentX) * lerp;
-        currentY += (targetY - currentY) * lerp;
-        heroName.style.transform = `translate(${currentX.toFixed(2)}px, ${currentY.toFixed(2)}px)`;
-        requestAnimationFrame(updateParallax);
-    };
-
-    requestAnimationFrame(updateParallax);
-})();
 
 
 
