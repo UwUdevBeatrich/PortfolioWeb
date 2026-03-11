@@ -176,10 +176,86 @@ function initScrollReveal() {
     revealElements.forEach((el) => observer.observe(el));
 }
 
+// github api helpers
+async function fetchGitHubCommits() {
+    const CACHE_KEY = 'gh_commits';
+    const CACHE_TTL = 3600000;
+    const USERNAME = 'UwUdevBeatrich';
+
+    try {
+        const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+        if (cached && Date.now() - cached.ts < CACHE_TTL) {
+            return cached.count;
+        }
+    } catch (e) {}
+
+    try {
+        const reposRes = await fetch(`https://api.github.com/users/${USERNAME}/repos?per_page=100`);
+        if (!reposRes.ok) return 0;
+        const repos = await reposRes.json();
+
+        let total = 0;
+        const promises = repos.filter(r => !r.fork).map(async (repo) => {
+            try {
+                const res = await fetch(`https://api.github.com/repos/${USERNAME}/${repo.name}/contributors?per_page=10`);
+                if (!res.ok) return 0;
+                const contribs = await res.json();
+                if (!Array.isArray(contribs)) return 0;
+                const me = contribs.find(c => c.login.toLowerCase() === USERNAME.toLowerCase());
+                return me ? me.contributions : 0;
+            } catch (e) { return 0; }
+        });
+
+        const counts = await Promise.all(promises);
+        total = counts.reduce((a, b) => a + b, 0);
+
+        if (total > 0) {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ count: total, ts: Date.now() }));
+        }
+        return total;
+    } catch (e) { return 0; }
+}
+
+async function fetchProjectCount() {
+    const CACHE_KEY = 'gh_project_count';
+    const CACHE_TTL = 3600000;
+    const USERNAME = 'UwUdevBeatrich';
+    const PRIVATE_PROJECTS = 7;
+
+    try {
+        const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+        if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.count;
+    } catch (e) {}
+
+    try {
+        const res = await fetch(`https://api.github.com/users/${USERNAME}`);
+        if (!res.ok) return PRIVATE_PROJECTS;
+        const user = await res.json();
+        const total = (user.public_repos || 0) + PRIVATE_PROJECTS;
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ count: total, ts: Date.now() }));
+        return total;
+    } catch (e) { return PRIVATE_PROJECTS; }
+}
+
 // stat counters
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
-function initStatCounters() {
+async function initStatCounters() {
+    const [commitCount, projectCount] = await Promise.all([
+        fetchGitHubCommits(),
+        fetchProjectCount(),
+    ]);
+
+    const commitsStat = document.getElementById('commits-stat');
+    if (commitsStat && commitCount > 0) {
+        commitsStat.setAttribute('data-target', commitCount);
+    }
+
+    const projectsStat = document.getElementById('projects-stat');
+    if (projectsStat && projectCount > 0) {
+        projectsStat.setAttribute('data-target', projectCount);
+    }
+
     const statNumbers = document.querySelectorAll('.stat-number');
     if (!statNumbers.length) return;
 
@@ -220,6 +296,195 @@ function animateStatValue(el, target, duration) {
     };
 
     requestAnimationFrame(step);
+}
+
+// auto-populate projects from github
+const KNOWN_PROJECTS = {
+    'AstroDegen_Web': {
+        title: 'AstroDegen Web',
+        category: 'Frontend',
+        description: 'Numerology & Chinese Zodiac web app. Enter your birth date, get your zodiac sign, life number, and personality reading.',
+        tags: ['HTML', 'CSS', 'JavaScript'],
+        image: 'assets/astrodegenweb.png',
+    },
+    'AstroDegen_TelegramBot': {
+        title: 'AstroDegen Bot',
+        category: 'Telegram Bot',
+        description: 'Telegram bot that reads your Chinese Zodiac and Numerology from your birth date. No sugarcoating — just raw personality breakdowns.',
+        tags: ['Python', 'python-telegram-bot', 'ephem'],
+        icon: '&#128302;',
+    },
+    'PortfolioWeb': {
+        hidden: true,
+    },
+};
+
+const MANUAL_PROJECTS = [
+    {
+        title: 'Crypto Price Alert',
+        category: 'Telegram Bot',
+        description: 'Telegram bot that tracks BTC, ETH and SOL price changes in real-time. Sends alerts on big moves, current prices on command, and generates candlestick charts.',
+        tags: ['Python', 'Binance API', 'mplfinance'],
+        icon: '&#128200;',
+        url: null,
+        pushed_at: '2025-01-01T00:00:00Z',
+    },
+];
+
+function detectLanguageTags(repo) {
+    const lang = repo.language;
+    if (!lang) return ['Code'];
+    const tags = [lang];
+    const name = repo.name.toLowerCase();
+    const desc = (repo.description || '').toLowerCase();
+    if (name.includes('bot') || name.includes('telegram') || desc.includes('bot') || desc.includes('telegram')) {
+        tags.push('Bot');
+    }
+    return tags;
+}
+
+function detectCategory(repo) {
+    const name = repo.name.toLowerCase();
+    const desc = (repo.description || '').toLowerCase();
+    if (name.includes('bot') || name.includes('telegram') || desc.includes('bot') || desc.includes('telegram')) return 'Telegram Bot';
+    if (repo.language === 'HTML' || name.includes('web') || name.includes('portfolio')) return 'Frontend';
+    if (repo.language === 'Python') return 'Python';
+    return 'Project';
+}
+
+function buildCardHTML(project) {
+    let imageHTML;
+    if (project.image) {
+        imageHTML = `<img src="${project.image}" alt="${project.title}">`;
+    } else if (project.icon) {
+        imageHTML = `<span class="card-icon">${project.icon}</span>`;
+    } else {
+        imageHTML = `<span class="card-icon">&#128187;</span>`;
+    }
+
+    const tagsHTML = project.tags.map(t => `<span class="tag">${t}</span>`).join('');
+    const linkHTML = project.url
+        ? `<div class="card-links"><a href="${project.url}" target="_blank" rel="noopener" class="card-link">Code</a></div>`
+        : '';
+
+    return `
+        <article class="project-card reveal">
+            <div class="card-image">${imageHTML}</div>
+            <div class="card-body">
+                <div class="card-header">
+                    <h3 class="card-title">${project.title}</h3>
+                    <span class="card-category">${project.category}</span>
+                </div>
+                <p class="card-description">${project.description}</p>
+                <div class="card-tags">${tagsHTML}</div>
+                ${linkHTML}
+            </div>
+        </article>`;
+}
+
+async function populateProjects() {
+    const grid = document.getElementById('projects-grid');
+    if (!grid) return;
+
+    const CACHE_KEY = 'gh_projects';
+    const CACHE_TTL = 3600000;
+    const USERNAME = 'UwUdevBeatrich';
+
+    let repos = [];
+
+    try {
+        const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+        if (cached && Date.now() - cached.ts < CACHE_TTL) {
+            repos = cached.repos;
+        }
+    } catch (e) {}
+
+    if (!repos.length) {
+        try {
+            const res = await fetch(`https://api.github.com/users/${USERNAME}/repos?per_page=100&sort=pushed`);
+            if (res.ok) {
+                repos = await res.json();
+                localStorage.setItem(CACHE_KEY, JSON.stringify({ repos, ts: Date.now() }));
+            }
+        } catch (e) {}
+    }
+
+    const allProjects = [];
+
+    for (const repo of repos) {
+        if (repo.fork) continue;
+        const known = KNOWN_PROJECTS[repo.name];
+        if (known && known.hidden) continue;
+
+        if (known) {
+            allProjects.push({
+                title: known.title,
+                category: known.category,
+                description: known.description,
+                tags: known.tags,
+                image: known.image || null,
+                icon: known.icon || null,
+                url: repo.html_url,
+                pushed_at: repo.pushed_at,
+            });
+        } else {
+            allProjects.push({
+                title: repo.name.replace(/[_-]/g, ' '),
+                category: detectCategory(repo),
+                description: repo.description || 'In progress...',
+                tags: detectLanguageTags(repo),
+                image: null,
+                icon: null,
+                url: repo.html_url,
+                pushed_at: repo.pushed_at,
+            });
+        }
+    }
+
+    allProjects.push(...MANUAL_PROJECTS);
+    allProjects.sort((a, b) => new Date(b.pushed_at) - new Date(a.pushed_at));
+
+    grid.innerHTML = allProjects.map(buildCardHTML).join('');
+
+    if (allProjects.length > 4) {
+        const btn = document.createElement('button');
+        btn.className = 'projects-see-more';
+        btn.textContent = 'See more';
+        grid.after(btn);
+
+        const cards = grid.querySelectorAll('.project-card');
+        cards.forEach((card, i) => {
+            if (i >= 4) card.classList.add('hidden-card');
+        });
+
+        btn.addEventListener('click', () => {
+            cards.forEach(card => card.classList.remove('hidden-card'));
+            btn.remove();
+        });
+    }
+}
+
+// mobile card highlight
+function initMobileCardHighlight() {
+    if (window.matchMedia('(hover: hover)').matches) return;
+
+    const cards = document.querySelectorAll('.project-card, .about-terminal');
+    if (!cards.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('mobile-active');
+            } else {
+                entry.target.classList.remove('mobile-active');
+            }
+        });
+    }, {
+        rootMargin: '-35% 0px -35% 0px',
+        threshold: 0.5
+    });
+
+    cards.forEach(card => observer.observe(card));
 }
 
 // hero entrance
@@ -542,7 +807,10 @@ if (introEnter && introOverlay) {
                     introAnimating = false;
 
                     triggerHeroEntrance();
-                    initScrollReveal();
+                    populateProjects().then(() => {
+                        initScrollReveal();
+                        initMobileCardHighlight();
+                    });
                     initStatCounters();
                     startMainPetals();
                 }, 400);
